@@ -8,6 +8,8 @@ SOAs2plus_regular(
   s,
   k,
   m = NULL,
+  orth = TRUE,
+  old = FALSE,
   noptim.rounds = 1,
   noptim.repeats = 1,
   optimize = TRUE,
@@ -25,6 +27,10 @@ the maximum possible number of columns is created, which is (s^k-1)/(s-1) - ((s-
 for s>2 and s^k-s^k1 - s^(k-k1) + 2, with k1=floor(k/2), for s=2; specifying a
 smaller m is beneficial not only for run time but also for possibly achieving a
 column-orthogonal array (see Details section)}
+
+\item{orth}{logical: if FALSE, suppresses attempts for orthogonal columns and selects the first permissible column for each column of B (see Details section)}
+
+\item{old}{logical, relevant for \code{orth=TRUE} only: if TRUE, limits possible columns for B to the columns not eligible for A (instead of the columns not used in A); should only be used for reproducing designs created by version 1.1 or earlier}
 
 \item{noptim.rounds}{the number of optimization rounds for each independent restart}
 
@@ -67,6 +73,24 @@ that a single round (\code{noptim.rounds=1}) often does a very good job
 further rounds do not yield too much improvement; there are also cases
 (e.g. s=5 with k=3), for which the unoptimized array has a better phi_p than
 what can be achieved by most optimization attempts from a random start.
+
+The search for orthogonal columns can take a long time for larger arrays,
+even without optimization. If this is prohibitive (or not considered valuable),
+\code{orth=FALSE} causes the function to create the matrix B for equation D=2A+B
+with less computational effort.\cr
+The subsequent optimization, if not switched off,
+is of the same complexity, regardless of the value for \code{orth}. Its
+duration heavily depends on the number of optimization steps that are needed
+before the algorithm stops. This has not been systematically investigated;
+cases for which the total run time with optimization
+is shorter for \code{orth=TRUE} than for \code{orth=FALSE} have been observed.
+
+With package version 1.2, the creation of SOAs has changed: Up to version 1.1,
+the columns of B were chosen only from those columns that were \emph{not eligible} for A,
+whereas the new version chooses them from those columns that are \emph{not used} for A.
+This increases the chance to achieve geometrically orthogonal columns.\cr
+Users who want to reproduce a design from an earlier version
+can use argument \code{old}.
 }
 \note{
 Strength 2+ SOAs can accommodate a large number of factors with

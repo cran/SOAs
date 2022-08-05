@@ -1,6 +1,6 @@
 Package: SOAs
 Title: Creation of Stratum Orthogonal Arrays
-Version: 1.1
+Version: 1.2
 Authors@R: 
     c(person(given = "Ulrike",
            family = "Groemping",
@@ -21,9 +21,9 @@ RoxygenNote: 7.1.2
 Suggests: testthat (>= 3.0.0)
 Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2022-06-04 10:59:03 UTC; groemping
+Packaged: 2022-08-05 17:54:52 UTC; Grömping
 Author: Ulrike Groemping [aut, cre],
   Rob Carnell [ctb]
 Maintainer: Ulrike Groemping <ulrike.groemping@bht-berlin.de>
 Repository: CRAN
-Date/Publication: 2022-06-06 23:10:21 UTC
+Date/Publication: 2022-08-05 23:20:05 UTC
