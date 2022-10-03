@@ -1,5 +1,13 @@
 Change log for package SOAs
 
+Version 1.3, 03 October 2022
+
+* implemented the stratification pattern that was proposed by Tian and Xu (2022)
+  and whose implementation is described in Groemping (2022b)
+  (important functions: Spattern and dim_wt_tab;
+  important supporting function: contr.Power yields contrasts for factors with
+  s^el levels)
+
 Version 1.2, 05 August 2022
 
 * modified function createAB and documentation in SOAs2plus_regular:

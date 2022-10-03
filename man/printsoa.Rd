@@ -3,14 +3,20 @@
 \name{print.SOA}
 \alias{print.SOA}
 \alias{print.MDLE}
+\alias{print.Spattern}
+\alias{print.dim_wt_tab}
 \title{Print Methods}
 \usage{
 \method{print}{SOA}(x, ...)
 
 \method{print}{MDLE}(x, ...)
+
+\method{print}{Spattern}(x, ...)
+
+\method{print}{dim_wt_tab}(x, ...)
 }
 \arguments{
-\item{x}{object to be printed (SOA, OSOA, MDLE)}
+\item{x}{object to be printed (SOA, OSOA, MDLE, Spattern)}
 
 \item{...}{further arguments for function \code{print}}
 }
@@ -22,6 +28,9 @@ Print Methods
 }
 \examples{
 myOSOA <- OSOAs_regular(s=3, k=3, optimize=FALSE)
-print(myOSOA)
+myOSOA
 str(myOSOA)  ## structure for comparison
+Spat <- Spattern(myOSOA, s=3)
+dim_wt_tab(Spat)   ## print method prints NAs as .
+print(dim_wt_tab(Spat), na.print=" ")
 }
