@@ -7,7 +7,7 @@
 \alias{soacheck3D}
 \title{functions to evaluate stratification properties of (O)SOAs and GSOAs}
 \usage{
-Spattern(D, s, maxwt = 4, maxdim = NULL, ...)
+Spattern(D, s, maxwt = 4, maxdim = NULL, verbose = FALSE, ...)
 
 dim_wt_tab(pat, dimlim = NULL, wtlim = NULL, ...)
 
@@ -34,6 +34,9 @@ it is reduced accordingly (where \code{el} is such that \code{s^el} is the numbe
 see also Details);\cr
 if the specified limit is larger than \code{m=ncol(D)}, it is reduced to \code{m}}
 
+\item{verbose}{logical; if \code{TRUE}, additional information is printed
+(for \code{Spattern}, status information during run time; for the \code{SOAcheck...} functions, confounded pair or triple projections with A2 or A3, respectively, or table of correlations)}
+
 \item{...}{currently not used}
 
 \item{pat}{an object of class \code{Spattern}}
@@ -56,9 +59,6 @@ s^2xs and sxs^2 projections with \code{t=3}, \cr
 and s^3xs, s^2xs^2 and sxs^3 projections with \code{t=4}.\cr
 If \code{t=4} and \code{el=2}, property gamma (s^3 x s and s x s^3) is obviously
 impossible and will not be part of the checks.}
-
-\item{verbose}{logical; if \code{TRUE}, additional information is printed
-(confounded pair or triple projections with A2 or A3, respectively, or table of correlations)}
 }
 \value{
 Function \code{Spattern} returns an object of class \code{Spattern}
@@ -86,8 +86,8 @@ and \code{dim_wt_tab} extracts and formats the \code{dim_wt_tab} attribute of \c
 \details{
 Function \code{Spattern} calculates the stratification pattern or S pattern
 as proposed in Tian and Xu (2022) (under the name space-filling pattern);
-the details and the implementation in this function are also described in
-Groemping (2022b).\cr
+the details and the implementation in this function are described in
+Groemping (2023b); the function uses the full-factorial-based Helmert contrasts.\cr
 Position \code{j} in the S pattern shows the imbalance when considering \code{s^j}
 strata. \code{j} is also called the (total) weight. \code{j=1} can occur for an
 individual column only. \code{j=2} can be obtained either for an
@@ -182,8 +182,8 @@ soacheck3D(D, s=2, t=4)
 \references{
 For full detail, see \code{\link{SOAs-package}}.
 
-Groemping (2022a)\cr
-Groemping (2022b)\cr
+Groemping (2023a)\cr
+Groemping (2023b)\cr
 He and Tang (2013)\cr
 Shi and Tang (2020)\cr
 Tian and Xu (2022)

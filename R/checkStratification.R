@@ -32,7 +32,7 @@
 #' If \code{t=4} and \code{el=2}, property gamma (s^3 x s and s x s^3) is obviously
 #' impossible and will not be part of the checks.
 #' @param verbose logical; if \code{TRUE}, additional information is printed
-#' (confounded pair or triple projections with A2 or A3, respectively, or table of correlations)
+#' (for \code{Spattern}, status information during run time; for the \code{SOAcheck...} functions, confounded pair or triple projections with A2 or A3, respectively, or table of correlations)
 #' @param ... currently not used
 #'
 #' @return
@@ -50,8 +50,8 @@
 #' @details
 #' Function \code{Spattern} calculates the stratification pattern or S pattern
 #' as proposed in Tian and Xu (2022) (under the name space-filling pattern);
-#' the details and the implementation in this function are also described in
-#' Groemping (2022b).\cr
+#' the details and the implementation in this function are described in
+#' Groemping (2023b); the function uses the full-factorial-based Helmert contrasts.\cr
 #' Position \code{j} in the S pattern shows the imbalance when considering \code{s^j}
 #' strata. \code{j} is also called the (total) weight. \code{j=1} can occur for an
 #' individual column only. \code{j=2} can be obtained either for an
@@ -117,14 +117,15 @@
 #' @references
 #' For full detail, see \code{\link{SOAs-package}}.
 #'
-#' Groemping (2022a)\cr
-#' Groemping (2022b)\cr
+#' Groemping (2023a)\cr
+#' Groemping (2023b)\cr
 #' He and Tang (2013)\cr
 #' Shi and Tang (2020)\cr
 #' Tian and Xu (2022)
 #'
 #' @importFrom stats lm rnorm model.matrix
 #' @importFrom combinat combn
+#' @importFrom partitions compositions
 #'
 #' @examples
 #' nullcase <- matrix(0:7, nrow=8, ncol=4)
@@ -158,10 +159,10 @@
 #'   Spat <- (Spattern(D, s = 2, maxwt=5))
 #'   dim_wt_tab(Spat)
 
-Spattern <- function(D, s, maxwt=4, maxdim=NULL, ...){
-  ## examples and references are given in utilitiesEvaluate.R
+Spattern <- function(D, s, maxwt=4, maxdim=NULL, verbose=FALSE, ...){
+  ## examples and references are given in checkStratification.R
 
-  ## uses contr.Power with s=s
+  ## uses contr.FFbHelmert with s=s
   ## creates coding columns sorted such that
   ##      earlier columns mean coarser strata
   ## coarsest: weight(u)=1 (i.e. u=1,...,s-1 (0 is omitted))
@@ -188,6 +189,7 @@ Spattern <- function(D, s, maxwt=4, maxdim=NULL, ...){
   if (!length(unique(nlev))==1)
     stop("All columns of D must have the same number of levels.")
   nlev <- nlev[1]
+  dfm <- nlev - 1
   el <- round(log(nlev, base=s))
   if (!nlev == s^el)
     stop("The number of levels must be a power of s.")
@@ -218,14 +220,13 @@ Spattern <- function(D, s, maxwt=4, maxdim=NULL, ...){
 
   ################################################################
   ## obtaining the model matrix
-  for (i in 1:m)
-    D.df[[i]] <- factor(D.df[[i]])
-  contr <- contr.Power(n=nlev, s=s, contrasts=TRUE)
-  contrargs <- rep(list(contr), m)
-  names(contrargs) <- colnames(D.df)
   ### main effects columns of the Hmat
-  Hmat <- model.matrix(~., D.df, contrasts.arg = contrargs)[,-1]
-  ### sorted in the order u <- 1 to s^el-1 for each factor
+  contr <- contr.FFbHelmert(n=nlev, s=s, contrasts=TRUE)
+  Hmat <- matrix(NA, n, m*dfm)
+  for (i in 1:n)
+    for (j in 1:m)
+    {Hmat[i,((j-1)*dfm+1):(j*dfm)] <- contr[D.df[i,j]+1,]}
+  ### sorted in the order u <- 1 to dfm for each factor
 
   ################################################################
   ## preparations that do not depend on the actual design
@@ -234,69 +235,98 @@ Spattern <- function(D, s, maxwt=4, maxdim=NULL, ...){
   f <- rep(1:m, each=s^el-1)  ## factor referred to by column
   u <- rep(1:(s^el-1),m)  ## factor specific column number
   ## individual u weights
-  uwt <- ceiling(log(u+1, base=s))  ## factor specific weights
+  uwt <- rep(rep(1:el, times=s^(1:el)-s^(1:el-1)), m)  ## factor specific weights
 
   ## switch factors on or off in interactions
   picks <- lapply(1:maxdim, function(obj) combn(1:m, obj))
   if (maxdim==m) picks[[length(picks)]] <-
-        matrix(picks[[length(picks)]], ncol=1)
-        ### corrects stupid behavior of combinat::combn
+    matrix(picks[[length(picks)]], ncol=1)
+  ### corrects stupid behavior of combinat::combn
 
   ## obtain the invariant weights for each relevant dimension
-  combiweights <- lapply(1:maxdim,
-                         function(obj){
-                           picked <- picks[[obj]][,1]
-                           maxsinglewt <- min(maxwt + 1 - obj, el)
-                           colnums <- mapply(":", (picked-1)*(s^el-1)+1,
-                                                  (picked-1)*(s^el-1)+s^maxsinglewt-1,
-                                             SIMPLIFY = FALSE)
-                           ## colnums is a list with d vector-valued elements
-                           ## that need to be crossed with expand.grid
-                           ## (contains the usable columns of M1
-                           ## for all factors in the first dD projection)
-                           ## as weights are invariant to specific projections --> use these
-                           colnums <- as.matrix(expand.grid(rev(colnums)))[,obj:1, drop=FALSE]
-                           ## now, colnums is a matrix, the rows of which contain
-                           ## the column combinations from the first dD projection
-                           rowSums(matrix(uwt[colnums], nrow=nrow(colnums)))
-                         }
-                         )
-  ## combiweights is a list of weights with maxdim elements
-  ## when using only columns from M1 with weights up to maxsinglewt
+  cs <- lapply(1:maxdim, function(obj) compositions(maxwt, obj, include.zero=FALSE))
+  cs <- lapply(cs, function(obj) pmin(obj, el))
+  ## remove duplicates
+  cs[-1] <- lapply(cs[-1], function(obj) obj[,!duplicated(t(as.matrix(obj))), drop=FALSE])
+  ## remove dominated variants
+  behalten <- function(M){
+    ## identifies variants that are not dominated
+    if (ncol(M)==1) return(M)
+    hilf <- matrix(NA, ncol(M), ncol(M))
+    for (cc in 2:ncol(M)){
+      for (ccc in 1:(cc-1))
+      {hilf[ccc,cc] <- all(M[,ccc]<=M[,cc])
+      hilf[cc,ccc] <- all(M[,cc] <=M[,ccc])
+      }
+    }
+    which(rowSums(hilf, na.rm=TRUE)==0)
+  }
+  cs[-1] <- lapply(cs[-1], function(obj){
+    ## eliminate dominated columns
+    obj[,behalten(obj), drop=FALSE]
+  })
 
-  combiweights_reduced <- lapply(combiweights, function(obj) obj[obj<=maxwt])
+  ## numbers of rows in colnums (upper bound, may contain duplicates)
+  ncs <- sapply(cs, function(obj) sum(apply(s^obj-1,2,prod)))
+
+  combiweights <- vector(mode="list", maxdim)
+  for (obj in 1:maxdim){
+    if (verbose)
+      cat(paste("start preparations for", obj, "dimensions, \nup to", ncs[obj], "combinations\n"))
+    picked <- picks[[obj]][,1]
+    cs_now <- cs[[obj]]
+    ## pick the adequate colnums based on the weights in cs_now
+    (colnums <- lapply(1:ncol(cs_now), function(obj2)
+      mapply(":", (picked-1)*dfm+1,
+             (picked-1)*dfm + s^cs_now[,obj2] - 1,
+             SIMPLIFY=FALSE)))
+    colnums <- do.call(rbind, lapply(colnums, expand.grid))
+    colnums <- as.matrix(colnums[!duplicated(colnums),])
+    ## colnums is the matrix of all d-column number combinations
+    ## such that the combined weight is at most maxwt
+    ## (contains the usable columns of M1
+    ## for all factors in the first dD projection)
+    ## as weights are invariant to specific projections --> use these
+    combiweights[[obj]] <- rowSums(matrix(uwt[colnums], nrow=nrow(colnums)))
+  }
+  ## combiweights is a list of weights with maxdim elements
+  ## when using only columns from M1 with combined weights up to maxwt
 
   ## initialize dimension-specific contributions
   ##      pat_dim is transient
   hilf <- rep(NA, maxwt); names(hilf) <- 1:maxwt
   contrib_list <- rep(list(hilf), maxdim)
 
-## obtain contributions from each dimension
+  ## obtain contributions from each dimension
   for (dim_now in 1:maxdim){
+    if (verbose)
+      cat(paste("start calculations for", dim_now, "dimensions, \nup to", ncs[dim_now], "combinations\n"))
     picks_now <- picks[[dim_now]]
-    maxsinglewt <- min(maxwt + 1 - dim_now, el)
+    cs_now <- cs[[dim_now]]
     pat_dim <- rep(NA, maxwt); names(pat_dim) <- 1:maxwt
-    wt <- combiweights_reduced[[dim_now]]
+    wt <- combiweights[[dim_now]]
     for (j in 1:ncol(picks_now)){
-       picked <- picks_now[,j]
-       ## main effect model matrix columns for the selected array columns
-       ## with maximum possible single column weight
-       colnums <- mapply(":", (picked-1)*(s^el-1)+1,
-                         (picked-1)*(s^el-1)+s^maxsinglewt-1,
-                         SIMPLIFY = FALSE)
-       ## colnums is a list with d vector-valued elements
-       ## that need to be crossed with expand.grid
-       ## (contains the usable columns of M1
-       ## for all factors in the first dD projection)
-       ## as weights are invariant to specific projections --> use these
-       ## obtains all combinations
-       colnums <- as.matrix(expand.grid(rev(colnums)))[,dim_now:1, drop=FALSE]
-       colnums <- colnums[which(combiweights[[dim_now]] <= maxwt),,drop=FALSE]
-       for (i in 1:nrow(colnums)){
-         contrib <- sum(apply(Hmat[,colnums[i,], drop=FALSE], 1, prod))^2
-         if (is.na(pat_dim[wt[i]])) pat_dim[wt[i]] <- contrib else
-           pat_dim[wt[i]] <- pat_dim[wt[i]] + contrib
-       }
+      picked <- picks_now[,j]
+      ## main effect model matrix columns for the selected array columns
+      ## with maximum possible combined weight
+      ## pick the adequate colnums based on the weights in cs_now
+      (colnums <- lapply(1:ncol(cs_now), function(obj)
+        mapply(":", (picked-1)*dfm + 1,
+               (picked-1)*dfm + s^cs_now[,obj] - 1,
+               SIMPLIFY=FALSE)))
+      colnums <- do.call(rbind, lapply(colnums, expand.grid))
+      colnums <- as.matrix(colnums[!duplicated(colnums),])
+      ## colnums is the matrix of all d-column number combinations
+      ## such that the combined weight is at most maxwt
+      ## (contains the usable columns of M1
+      ## for all factors in picked)
+      ## as weights are invariant to specific projections --> use weights
+      ## from first 1:d, as calculated before
+      for (i in 1:nrow(colnums)){
+        contrib <- sum(apply(Hmat[,colnums[i,], drop=FALSE], 1, prod))^2
+        if (is.na(pat_dim[wt[i]])) pat_dim[wt[i]] <- contrib else
+          pat_dim[wt[i]] <- pat_dim[wt[i]] + contrib
+      }
     }
     contrib_list[[dim_now]] <- round(pat_dim/n^2, 8)
   }
