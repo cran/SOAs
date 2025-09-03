@@ -1,30 +1,30 @@
+#' Another utility for array creation (Shi and Tang)
+#' @rdname createABCcols
+#'
+#' @param k integer; determines the run size: the resulting array will have s^k runs
+#'
+#' @return \code{createABCcols} returns a list of Yates matrix column numbers to
+#' be used for A, B, AB and C for the Shi and Tang (2020) family 1 construction
+#'
+#' @keywords internal
+## function for the Shi and Tang (2020) family 1 construction
 createABCcols <- function(k){
-    ## this is a function for obtaining the columns C
-    ## for the Shi and Xu construction from the JASA manuscript
-    ## that I reviewed
-    ## make sure to replace all references to that manuscript
-    ## by a citable source, as soon as that becomes available
-  if (k==5){
-    ## this is the old A,B with a modified C
-    ## According to the JASA manuscript by Shi and Xu (review)
-    ##     it has at least P_4,3=27
-    ## the particular A,B of Shi Tang 2020 yields P_4,3=28
-    ##     regardless of the choice of C
-    #return(list(Acols=  c( 1,  2, 4,  8, 16,  7, 11, 19, 29),
-    #            Bcols=  c(24, 20, 9,  6,  5, 27, 17, 12, 3),
-    #            ABcols= c(25, 22, 13,14, 21, 28, 26, 31, 30),
-    #            ## Ccols figured out by me
-    #            ## using Theorem 1 of the JASA manuscript (by Shi and Xu)
-    #            Ccols = c(20, 24, 27, 17, 9,  9, 13, 5, 12)))
-
-    ## better P4,3 based on A isomorphic to 9-4.2 according
-    ##     to the JASA manuscript
-    return(list(Acols=  c( 1,  2, 4,  8, 16,  15,19,21,22),
-                Bcols=  c(24, 28, 3,  5, 10,   6,12,14,11),
-                ABcols= c(25, 30, 7, 13, 26,   9,31,27,29),
-                Ccols = c(6, 5, 10, 20, 7, 12, 7, 18, 17)))
-  }
-   if (k%%2==0){
+  if (k==5)
+    return(list(Acols=  c( 1,2,4,8,16,  15,19,21,22),
+            Bcols=  c(24,28,3,5,   10,   6,12,14,11),
+            ABcols= c(25, 30, 7, 13, 26, 9,31,27,29),
+            ## Ccols figured out by me
+            ## using Theorem 1 of the JASA manuscript (by Shi and Xu)
+            Ccols = c(6, 5, 10, 20, 7, 12, 7, 18, 17)))
+  # columns for A and B that were previously used
+  # with a suitable C column, but worse S pattern
+  # return(list(Acols=  c( 1,  2, 4,  8, 16,  7, 11, 19, 29),
+  #            Bcols=  c(24, 20, 9,  6,  5, 27, 17, 12, 3),
+  #            ABcols= c(25, 22, 13,14, 21, 28, 26, 31, 30),
+  ##    Ccols figured out by me
+  ##     using Theorem 1 of the JASA manuscript (by Shi and Xu)
+  #     Ccols = c(20, 24, 27, 17, 9,  9, 13, 5, 12)))
+  if (k%%2==0){
     ## even k, start vector for k=4
     Acols <- c(1, 2, 4, 8, 15)
     Bcols <- c(12, 9, 3, 6, 5)

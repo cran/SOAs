@@ -3,7 +3,6 @@
 \docType{package}
 \name{SOAs-package}
 \alias{SOAs-package}
-\alias{_PACKAGE}
 \alias{'SOAs-package'}
 \title{Creation of Stratum (aka Strong) Orthogonal Arrays}
 \description{
@@ -59,6 +58,8 @@ Liu, H. and Liu, M.-Q. (2015). Column-orthogonal strong orthogonal arrays and sl
 Shi, L. and Tang, B. (2020). Construction results for strong orthogonal arrays of strength three. \emph{Bernoulli} \strong{26}, 418-431. \doi{10.3150/19-BEJ1130}
 
 Tian, Y. and Xu, H. (2022). A minimum aberration-type criterion for selecting space-filling designs. \emph{Biometrika} \strong{109}, 489-501. \doi{10.1093/biomet/asab021}
+
+Tian, Y. and Xu, H. (2023+). Stratification Pattern Enumerator and its Applications. To appear in \emph{J. Roy. Statist. Soc.} Series \strong{B}.
 
 Weng, J. (2014). Maximin Strong Orthognal Arrays. \emph{Master's thesis} at Simon Fraser University under supervision of Boxin Tang and Jiguo Cao. \url{https://summit.sfu.ca/item/14433}
 
